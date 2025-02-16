@@ -2,6 +2,8 @@ package com.example.next.domain.post.post.entity;
 
 import com.example.next.domain.member.member.entity.Member;
 import com.example.next.domain.post.comment.entity.Comment;
+import com.example.next.global.dto.Empty;
+import com.example.next.global.dto.RsData;
 import com.example.next.global.entity.BaseTime;
 import com.example.next.global.exception.ServiceException;
 import jakarta.persistence.*;
@@ -59,16 +61,16 @@ public class Post extends BaseTime {
         comments.remove(comment);
     }
 
-    public void canModify(Member actor) {
+    public RsData<Empty> canModify(Member actor) {
         if (actor == null) {
-            throw new ServiceException("401-1", "인증 정보가 없습니다.");
+            return new RsData<>("401-1", "인증 정보가 없습니다.");
         }
 
-        if (actor.isAdmin()) return;
+        if (actor.isAdmin()) return null;
 
-        if (actor.equals(this.author)) return;
+        if (actor.equals(this.author)) return null;
 
-        throw new ServiceException("403-1", "자신이 작성한 글만 수정 가능합니다.");
+        return new RsData<>("403-1", "자신이 작성한 글만 수정 가능합니다.");
     }
 
     public void canDelete(Member actor) {
@@ -84,7 +86,9 @@ public class Post extends BaseTime {
     }
 
     public void canRead(Member actor) {
-        if (actor.equals(this.author)) return;
+        if (actor.equals(this.author)) {
+            return;
+        }
         if (actor.isAdmin()) return;
 
         throw new ServiceException("403-1", "비공개 설정된 글입니다.");
@@ -98,5 +102,11 @@ public class Post extends BaseTime {
                 .orElseThrow(
                         () -> new ServiceException("404-2", "존재하지 않는 댓글입니다.")
                 );
+    }
+
+    public boolean getActorProcessable(Member actor) {
+        assert actor != null;
+        if (actor.isAdmin()) return true;
+        return actor.equals(this.author);
     }
 }

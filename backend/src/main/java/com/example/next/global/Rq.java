@@ -2,6 +2,8 @@ package com.example.next.global;
 
 import com.example.next.domain.member.member.entity.Member;
 import com.example.next.domain.member.member.service.MemberService;
+import com.example.next.global.dto.Empty;
+import com.example.next.global.dto.RsData;
 import com.example.next.global.exception.ServiceException;
 import com.example.next.global.security.SecurityUser;
 import jakarta.servlet.http.Cookie;
@@ -36,20 +38,22 @@ public class Rq {
         );
     }
 
-    public Member getActor() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    public boolean isLogined() {
+        return SecurityContextHolder.getContext().getAuthentication() != null;
+    }
 
-        if(authentication == null) {
-            throw new ServiceException("401-2", "로그인이 필요합니다.");
+    public Member getActor() {
+
+        if(!isLogined()) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
         }
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
 
-        if(!(principal instanceof SecurityUser)) {
-            throw new ServiceException("401-3", "잘못된 인증 정보입니다");
+        if(!(principal instanceof SecurityUser user)) {
+            throw new ServiceException("401-2", "잘못된 인증 정보입니다.");
         }
-
-        SecurityUser user = (SecurityUser) principal;
 
         return Member.builder()
                 .id(user.getId())
@@ -110,4 +114,6 @@ public class Rq {
 
         response.addCookie(cookie);
     }
+
+
 }

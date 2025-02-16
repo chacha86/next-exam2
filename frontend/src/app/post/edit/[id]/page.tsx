@@ -29,7 +29,5 @@ export default async function Page({
   const rsData = response.data;
   const post = rsData.data;
 
-  console.log(post.actorProcessable);
-
   return <ClientPage post={post} />;
 }

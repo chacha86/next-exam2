@@ -27,4 +27,7 @@ public class RsData<T> {
         return Integer.parseInt(statusCodeStr);
     }
 
+    public boolean isSuccess() {
+        return getStatusCode() < 300;
+    }
 }

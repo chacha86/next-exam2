@@ -71,6 +71,9 @@ public class ApiV1MemberController {
 
         rq.addCookie("accessToken", accessToken);
         rq.addCookie("apiKey", member.getApiKey());
+        rq.addCookie("test", "1");
+        rq.addCookie("test2", "2");
+        rq.addCookie("test3", "3");
 
         return new RsData<>(
                 "200-1",

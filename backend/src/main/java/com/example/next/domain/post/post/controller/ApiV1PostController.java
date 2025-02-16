@@ -111,10 +111,17 @@ public class ApiV1PostController {
             post.canRead(actor);
         }
 
+        PostWithContentDto postWithContentDto = new PostWithContentDto(post);
+
+        if(rq.isLogined()) {
+            boolean processable = post.getActorProcessable(rq.getActor());
+            postWithContentDto.setActorProcessable(processable);
+        }
+
         return new RsData<>(
                 "200-1",
                 "%d번 글을 조회하였습니다.".formatted(id),
-                new PostWithContentDto(post)
+                postWithContentDto
         );
     }
 
@@ -144,7 +151,7 @@ public class ApiV1PostController {
         );
     }
 
-    record ModifyReqBody(@NotBlank String title, @NotBlank String content) {
+    record ModifyReqBody(@NotBlank String title, @NotBlank String content, boolean published, boolean listed) {
     }
 
     @Operation(
@@ -163,7 +170,7 @@ public class ApiV1PostController {
 
         post.canModify(actor);
 
-        postService.modify(post, reqBody.title(), reqBody.content());
+        postService.modify(post, reqBody.title(), reqBody.content(), reqBody.published(), reqBody.listed());
 
         return new RsData<>(
                 "200-1",
