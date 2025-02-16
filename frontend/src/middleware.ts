@@ -8,23 +8,9 @@ import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adap
 export async function middleware(request: NextRequest) {
   const myCookies = await cookies();
   const accessToken = myCookies.get("accessToken");
-  const apiKey = myCookies.get("apiKey");
-  let isExpired = true;
-  let payload = null;
 
-  if (accessToken && apiKey) {
-    try {
-      const tokenParts = accessToken.value.split(".");
-      payload = JSON.parse(Buffer.from(tokenParts[1], "base64").toString());
-      const expTimestamp = payload.exp * 1000; // exp는 초 단위이므로 밀리초로 변환
-      isExpired = Date.now() > expTimestamp;
-    } catch (e) {
-      console.error("토큰 파싱 중 오류 발생:", e);
-    }
-  }
-  console.log("payload", payload);
-  let isLogin = payload !== null;
-  console.log("isLogin", isLogin);
+  const { isLogin, isExpired, payload } = parseAccessToken(accessToken?.value);
+
   if (isLogin && isExpired) {
     const response = await refreshAccessToken(myCookies);
     return response;
@@ -38,6 +24,26 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: "/((?!.*\\.|api\\/).*)",
 };
+
+function parseAccessToken(accessToken: string | undefined) {
+  let isExpired = true;
+  let payload = null;
+
+  if (accessToken) {
+    try {
+      const tokenParts = accessToken.split(".");
+      payload = JSON.parse(Buffer.from(tokenParts[1], "base64").toString());
+      const expTimestamp = payload.exp * 1000; // exp는 초 단위이므로 밀리초로 변환
+      isExpired = Date.now() > expTimestamp;
+    } catch (e) {
+      console.error("토큰 파싱 중 오류 발생:", e);
+    }
+  }
+
+  let isLogin = payload !== null;
+
+  return { isLogin, isExpired, payload };
+}
 
 async function refreshAccessToken(cookies: ReadonlyRequestCookies) {
   const nextResponse = NextResponse.next();
